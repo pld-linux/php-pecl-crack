@@ -1,0 +1,12 @@
+diff -burN php-pecl-crack-0.1.orig/crack-0.1/config.m4 php-pecl-crack-0.1/crack-0.1/config.m4
+--- php-pecl-crack-0.1.orig/crack-0.1/config.m4	2004-08-09 00:03:04.849403760 +0200
++++ php-pecl-crack-0.1/crack-0.1/config.m4	2004-08-09 00:03:21.618854416 +0200
+@@ -7,7 +7,7 @@
+ 
+ if test "$PHP_CRACK" != "no"; then
+ 
+-  for i in $PHP_CRACK/lib $PHP_CRACK/cracklib /usr/local/lib /usr/lib; do
++  for i in $PHP_CRACK/lib $PHP_CRACK/cracklib /usr/local/lib /usr/lib $PHP_CRACK/lib64 /usr/lib64 /usr/local/lib64; do
+     test -f $i/libcrack.$SHLIB_SUFFIX_NAME -o -f $i/libcrack.a && CRACK_LIBDIR=$i && break
+   done
+ 
