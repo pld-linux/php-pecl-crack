@@ -5,11 +5,12 @@ Summary:	%{_modname} - checks if password is vulnerable to dictionary attacks
 Summary(pl):	%{_modname} - sprawdzanie czy has³o jest podatne na ataki s³ownikowe
 Name:		php-pecl-%{_modname}
 Version:	0.1
-Release:	2
+Release:	2.1
 License:	Artistic
 Group:		Development/Languages/PHP
 Source0:	http://pecl.php.net/get/%{_modname}-%{version}.tgz
 # Source0-md5:	2c0dc4d436904838cc6aba41a3ca7dea
+Patch0:		%{name}-m4_fixes.patch
 URL:		http://pecl.php.net/package/crack/
 BuildRequires:	libtool
 BuildRequires:	php-devel >= 3:5.0.0
@@ -39,6 +40,7 @@ To rozszerzenie ma w PECL status: %{_status}.
 
 %prep
 %setup -q -c
+%patch0 -p1
 
 %build
 cd %{_modname}-%{version}
