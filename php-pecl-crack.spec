@@ -32,7 +32,7 @@ In PECL status of this extension is: %{_status}.
 
 %description -l pl
 Ten pakiet dostarcza interfejsu do bibliotek cracklib (libcrack),
-dostarczanych z wiêkszo¶ci± dystrybucji uniksowo-podobnych. Pozwala to
+dostarczanych z wiêkszo¶ci± dystrybucji uniksopodobnych. Pozwala to
 na porównanie hase³ wzglêdem s³owników celem zapewnienia minimalnego
 poziomu bezpieczeñstwa.
 
