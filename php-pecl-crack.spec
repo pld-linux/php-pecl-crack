@@ -12,7 +12,7 @@ Source0:	http://pecl.php.net/get/%{_modname}-%{version}.tgz
 # Source0-md5:	0fbce1787086f21683f0ba5115902223
 Patch0:		%{name}-m4_fixes.patch
 URL:		http://pecl.php.net/package/crack/
-BuildRequires:	libcrack-devel
+BuildRequires:	cracklib-devel
 BuildRequires:	libtool
 BuildRequires:	php-devel >= 3:5.0.0
 Requires:	php-common >= 3:5.0.0
