@@ -15,7 +15,6 @@ Source0:	http://pecl.php.net/get/%{_modname}-%{version}.tgz
 Patch0:		%{name}-m4_fixes.patch
 URL:		http://pecl.php.net/package/crack/
 BuildRequires:	cracklib-devel
-BuildRequires:	libtool
 BuildRequires:	php-devel >= 3:5.0.0
 BuildRequires:	rpmbuild(macros) >= 1.230
 %requires_eq_to php-common php-devel
@@ -52,8 +51,6 @@ phpize
 %install
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_sysconfdir}/conf.d,%{extensionsdir}}
-
-install %{_modname}-%{version}/modules/%{_modname}.so $RPM_BUILD_ROOT%{extensionsdir}
 
 install %{_modname}-%{version}/modules/%{_modname}.so $RPM_BUILD_ROOT%{extensionsdir}
 cat <<'EOF' > $RPM_BUILD_ROOT%{_sysconfdir}/conf.d/%{_modname}.ini
