@@ -6,7 +6,7 @@ Summary:	%{_modname} - checks if password is vulnerable to dictionary attacks
 Summary(pl):	%{_modname} - sprawdzanie czy has³o jest podatne na ataki s³ownikowe
 Name:		php-pecl-%{_modname}
 Version:	0.3
-Release:	2
+Release:	3
 License:	PHP
 Group:		Development/Languages/PHP
 Source0:	http://pecl.php.net/get/%{_modname}-%{version}.tgz
