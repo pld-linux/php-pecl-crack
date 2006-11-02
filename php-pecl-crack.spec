@@ -15,7 +15,7 @@ Patch0:		%{name}-m4_fixes.patch
 URL:		http://pecl.php.net/package/crack/
 BuildRequires:	cracklib-devel
 BuildRequires:	php-devel >= 3:5.0.0
-BuildRequires:	rpmbuild(macros) >= 1.254
+BuildRequires:	rpmbuild(macros) >= 1.322
 %{?requires_php_extension}
 Obsoletes:	php-crack
 Obsoletes:	php-pear-%{_modname}
