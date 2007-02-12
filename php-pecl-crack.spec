@@ -1,7 +1,7 @@
 %define		_modname	crack
 %define		_status		beta
 Summary:	%{_modname} - checks if password is vulnerable to dictionary attacks
-Summary(pl.UTF-8):   %{_modname} - sprawdzanie czy hasło jest podatne na ataki słownikowe
+Summary(pl.UTF-8):	%{_modname} - sprawdzanie czy hasło jest podatne na ataki słownikowe
 Name:		php-pecl-%{_modname}
 Version:	0.3
 Release:	4
