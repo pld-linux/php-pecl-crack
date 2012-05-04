@@ -1,17 +1,20 @@
+# TODO
+# - use system cracklib
 %define		modname	crack
 %define		status		beta
 Summary:	%{modname} - checks if password is vulnerable to dictionary attacks
 Summary(pl.UTF-8):	%{modname} - sprawdzanie czy hasło jest podatne na ataki słownikowe
 Name:		php-pecl-%{modname}
 Version:	0.4
-Release:	3
+Release:	4
 License:	PHP
 Group:		Development/Languages/PHP
 Source0:	http://pecl.php.net/get/%{modname}-%{version}.tgz
 # Source0-md5:	7cfe9df99f546cf6bd55b535d71e3b1f
 Patch0:		%{name}-m4_fixes.patch
+Patch1:		fix-pecl-bug-5765.patch
 URL:		http://pecl.php.net/package/crack/
-BuildRequires:	cracklib-devel
+#BuildRequires:	cracklib-devel
 BuildRequires:	php-devel >= 3:5.0.0
 BuildRequires:	rpmbuild(macros) >= 1.344
 %{?requires_php_extension}
@@ -40,6 +43,7 @@ To rozszerzenie ma w PECL status: %{status}.
 %setup -qc
 mv %{modname}-%{version}/* .
 %patch0 -p1
+%patch1 -p1
 
 %build
 phpize
