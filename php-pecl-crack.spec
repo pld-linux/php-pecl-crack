@@ -6,7 +6,7 @@ Summary:	%{modname} - checks if password is vulnerable to dictionary attacks
 Summary(pl.UTF-8):	%{modname} - sprawdzanie czy hasło jest podatne na ataki słownikowe
 Name:		php-pecl-%{modname}
 Version:	0.4
-Release:	5
+Release:	6
 License:	PHP
 Group:		Development/Languages/PHP
 Source0:	http://pecl.php.net/get/%{modname}-%{version}.tgz
@@ -18,8 +18,8 @@ URL:		http://pecl.php.net/package/crack/
 BuildRequires:	php-devel >= 3:5.0.0
 BuildRequires:	rpmbuild(macros) >= 1.344
 %{?requires_php_extension}
+Requires:	php(core) >= 5.0.4
 Obsoletes:	php-crack
-Requires:	php-common >= 4:5.0.4
 Obsoletes:	php-pear-%{modname}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
