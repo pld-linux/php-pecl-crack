@@ -1,22 +1,23 @@
 # TODO
 # - use system cracklib
+%define		php_name	php%{?php_suffix}
 %define		modname	crack
 %define		status		beta
 Summary:	%{modname} - checks if password is vulnerable to dictionary attacks
 Summary(pl.UTF-8):	%{modname} - sprawdzanie czy hasło jest podatne na ataki słownikowe
-Name:		php-pecl-%{modname}
+Name:		%{php_name}-pecl-%{modname}
 Version:	0.4
 Release:	6
 License:	PHP
 Group:		Development/Languages/PHP
 Source0:	http://pecl.php.net/get/%{modname}-%{version}.tgz
 # Source0-md5:	7cfe9df99f546cf6bd55b535d71e3b1f
-Patch0:		%{name}-m4_fixes.patch
+Patch0:		php-pecl-%{modname}-m4_fixes.patch
 Patch1:		fix-pecl-bug-5765.patch
 URL:		http://pecl.php.net/package/crack/
+BuildRequires:	%{php_name}-devel >= 3:5.0.0
 #BuildRequires:	cracklib-devel
-BuildRequires:	php-devel >= 3:5.0.0
-BuildRequires:	rpmbuild(macros) >= 1.344
+BuildRequires:	rpmbuild(macros) >= 1.650
 %{?requires_php_extension}
 Requires:	php(core) >= 5.0.4
 Obsoletes:	php-crack
