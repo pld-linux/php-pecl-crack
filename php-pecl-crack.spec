@@ -6,23 +6,23 @@
 Summary:	%{modname} - checks if password is vulnerable to dictionary attacks
 Summary(pl.UTF-8):	%{modname} - sprawdzanie czy hasło jest podatne na ataki słownikowe
 Name:		%{php_name}-pecl-%{modname}
-Version:	0.4
-Release:	8
+Version:	0.5.0
+Release:	1
 License:	PHP
 Group:		Development/Languages/PHP
-Source0:	http://pecl.php.net/get/%{modname}-%{version}.tgz
+Source0:	http://pecl.php.net/get/%{modname}-0.4.tgz
 # Source0-md5:	7cfe9df99f546cf6bd55b535d71e3b1f
+Patch100:	branch.diff
 Patch0:		php-pecl-%{modname}-m4_fixes.patch
-Patch1:		fix-pecl-bug-5765.patch
 URL:		http://pecl.php.net/package/crack/
 BuildRequires:	%{php_name}-devel >= 3:5.0.0
 #BuildRequires:	cracklib-devel
 BuildRequires:	rpmbuild(macros) >= 1.650
 %{?requires_php_extension}
 Requires:	php(core) >= 5.0.4
+Provides:	php(%{modname}) = %{version}
 Obsoletes:	php-crack
 Obsoletes:	php-pear-%{modname}
-Provides:	php(%{modname}) = %{version}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -43,9 +43,9 @@ To rozszerzenie ma w PECL status: %{status}.
 
 %prep
 %setup -qc
-mv %{modname}-%{version}/* .
+mv %{modname}-*/* .
+%patch100 -p0
 %patch0 -p1
-%patch1 -p1
 
 %build
 phpize

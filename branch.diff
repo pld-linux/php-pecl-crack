@@ -1,0 +1,551 @@
+Index: package2.xml
+===================================================================
+Cannot display: file marked as a binary type.
+svn:mime-type = application/xml
+Index: config.m4
+===================================================================
+--- config.m4	(.../tags/RELEASE_0_4)
++++ config.m4	(.../trunk)
+@@ -6,7 +6,14 @@
+ [  --with-crack            Include crack support.])
+ 
+ if test "$PHP_CRACK" != "no"; then
+-
++  AC_CHECK_HEADERS(sys/types.h)
++  AC_CHECK_TYPES([u_int8_t, u_int16_t, u_int32_t], [], [], [
++#include <stdio.h>
++#ifdef HAVE_SYS_TYPES_H
++# include <sys/types.h>
++#endif
++])
++  
+   if test "$PHP_CRACK" != "yes"; then
+     AC_MSG_ERROR(Only the bundled library is supported right now)
+     
+
+Property changes on: config.m4
+___________________________________________________________________
+Modified: cvs2svn:cvs-rev
+## -1 +1 ##
+-1.11
+\ No newline at end of property
++1.12
+\ No newline at end of property
+Index: crack.c
+===================================================================
+--- crack.c	(.../tags/RELEASE_0_4)
++++ crack.c	(.../trunk)
+@@ -38,7 +38,7 @@
+ 
+ /* {{{ crack_functions[]
+  */
+-function_entry crack_functions[] = {
++zend_function_entry crack_functions[] = {
+ 	PHP_FE(crack_opendict,			NULL)
+ 	PHP_FE(crack_closedict,			NULL)
+ 	PHP_FE(crack_check,				NULL)
+@@ -60,9 +60,7 @@
+ 	PHP_RINIT(crack),
+ 	PHP_RSHUTDOWN(crack),
+ 	PHP_MINFO(crack),
+-#if ZEND_MODULE_API_NO >= 20010901
+-	"0.3",
+-#endif
++	PHP_CRACK_VERSION,
+ 	STANDARD_MODULE_PROPERTIES,
+ };
+ /* }}} */
+@@ -96,6 +94,7 @@
+ 	int filename_len;
+ 	int result = SUCCESS;
+ 	
++#if PHP_VERSION_ID < 50400
+ 	if (PG(safe_mode)) {
+ 		filename_len = strlen(path) + 10;
+ 		filename = (char *) emalloc(filename_len);
+@@ -127,6 +126,7 @@
+ 			return FAILURE;
+ 		}
+ 	}
++#endif
+ 	
+ 	if (php_check_open_basedir(path TSRMLS_CC)) {
+ 		return FAILURE;
+@@ -155,7 +155,6 @@
+ {
+ 	if ((-1 == CRACKG(default_dict)) && (NULL != CRACKG(default_dictionary))) {
+ 		CRACKLIB_PWDICT *pwdict;
+-		printf("trying to open: %s\n", CRACKG(default_dictionary));
+ 		pwdict = cracklib_pw_open(CRACKG(default_dictionary), "r");
+ 		if (NULL != pwdict) {
+ 			ZEND_REGISTER_RESOURCE(return_value, pwdict, le_crack);
+@@ -232,6 +231,7 @@
+ {
+ 	php_info_print_table_start();
+ 	php_info_print_table_header(2, "crack support", "enabled");
++	php_info_print_table_row(2, "extension version", PHP_CRACK_VERSION);
+ 	php_info_print_table_end();
+ 	
+ 	DISPLAY_INI_ENTRIES();
+
+Property changes on: crack.c
+___________________________________________________________________
+Modified: cvs2svn:cvs-rev
+## -1 +1 ##
+-1.26
+\ No newline at end of property
++1.28
+\ No newline at end of property
+Index: package_dll.xml
+===================================================================
+--- package_dll.xml	(.../tags/RELEASE_0_4)
++++ package_dll.xml	(.../trunk)
+
+Property changes on: package_dll.xml
+___________________________________________________________________
+Deleted: svn:mime-type
+## -1 +0,0 ##
+-application/xml
+\ No newline at end of property
+Index: libcrack/src/config.h
+===================================================================
+--- libcrack/src/config.h	(.../tags/RELEASE_0_4)
++++ libcrack/src/config.h	(.../trunk)
+@@ -1,7 +0,0 @@
+-#include "../../config.h"
+-#if ZTS
+-# define THREADSAFE 1
+-#endif
+-#if !ZEND_DEBUG
+-# define NDEBUG
+-#endif
+Index: libcrack/src/cracklib.h
+===================================================================
+--- libcrack/src/cracklib.h	(.../tags/RELEASE_0_4)
++++ libcrack/src/cracklib.h	(.../trunk)
+@@ -24,10 +24,17 @@
+ #endif
+ 
+ #ifdef HAVE_CONFIG_H
+-# include "config.h"
++# include "../../config.h"
+ #endif
+ 
+-#if HAVE_CRACK_BUNDLED || defined(WIN32)
++#ifdef HAVE_SYS_TYPES_H
++# include <sys/types.h>
++#endif
++
++#ifdef IN_CRACKLIB
++# define MALLOC(x)                          (malloc(x))
++# define FREE(x)                            (free(x))
++#else
+ # include "php.h"
+ # include "php_ini.h"
+ # include "ext/standard/info.h"
+@@ -34,20 +41,29 @@
+ # include "../../php_crack.h"
+ # define MALLOC(x)                          (emalloc(x))
+ # define FREE(x)                            (efree(x))
+-#elif defined(IN_CRACKLIB)
+-# define MALLOC(x)                          (malloc(x))
+-# define FREE(x)                            (free(x))
++#endif
++
++#ifdef HAVE_U_INT8_T
++typedef u_int8_t int8;
+ #else
+-# error not available yet
++typedef unsigned char int8;
+ #endif
+ 
++#ifdef HAVE_U_INT16_T
++typedef u_int16_t int16;
++#else
++typedef unsigned short int int16;
++#endif
++
++#ifdef HAVE_U_INT32_T
++typedef u_int32_t int32;
++#else
++typedef unsigned int int32;
++#endif
++
+ #define STRINGSIZE                          1024
+ #define TRUNCSTRINGSIZE                     (STRINGSIZE/4)
+ 
+-typedef unsigned char int8;
+-typedef unsigned short int int16;
+-typedef unsigned long int int32;
+-
+ #ifndef NUMWORDS
+ # define NUMWORDS                           16
+ #endif
+
+Property changes on: libcrack/src/cracklib.h
+___________________________________________________________________
+Modified: cvs2svn:cvs-rev
+## -1 +1 ##
+-1.1
+\ No newline at end of property
++1.4
+\ No newline at end of property
+Index: libcrack/src/packlib.c
+===================================================================
+--- libcrack/src/packlib.c	(.../tags/RELEASE_0_4)
++++ libcrack/src/packlib.c	(.../trunk)
+@@ -91,9 +91,9 @@
+     strcpy(name, prefix);
+     strcat(name, ".pwi");
+ 	if (!(pdesc->ifp = fopen(name, mode))) {
++		perror(name);
+ 		fclose(pdesc->dfp);
+-		perror(name);
+-        FREE(name);
++		FREE(name);
+ 		FREE(pdesc);
+ 		
+ 		return (CRACKLIB_PWDICT *) 0;
+@@ -128,6 +128,9 @@
+ 			
+ 			fclose(ifp);
+ 			fclose(dfp);
++			if (wfp) { 
++				fclose(wfp);
++			}
+ 			FREE(pdesc);
+ 			
+ 			return (CRACKLIB_PWDICT *) 0;
+@@ -149,6 +152,9 @@
+ 			
+ 			fclose(ifp);
+ 			fclose(dfp);
++			if (wfp) { 
++				fclose(wfp);
++			}
+ 			FREE(pdesc);
+ 			
+ 			return (CRACKLIB_PWDICT *) 0;
+@@ -159,6 +165,9 @@
+ 		
+ 			fclose(ifp);
+ 			fclose(dfp);
++			if (wfp) { 
++				fclose(wfp);
++			}
+ 			FREE(pdesc);
+ 			
+ 			return (CRACKLIB_PWDICT *) 0;
+
+Property changes on: libcrack/src/packlib.c
+___________________________________________________________________
+Modified: cvs2svn:cvs-rev
+## -1 +1 ##
+-1.1
+\ No newline at end of property
++1.2
+\ No newline at end of property
+Index: libcrack/src/rules.c
+===================================================================
+--- libcrack/src/rules.c	(.../tags/RELEASE_0_4)
++++ libcrack/src/rules.c	(.../trunk)
+@@ -433,7 +433,7 @@
+ 					return (char *) 0;
+ 				}
+ 				
+-				if (strlen(area) <= limit) {
++				if ((int) strlen(area) <= limit) {
+ 					return (char *) 0;
+ 				}
+ 				break;
+@@ -450,7 +450,7 @@
+ 					return (char *) 0;
+ 				}
+ 				
+-				if (strlen(area) >= limit) {
++				if ((int) strlen(area) >= limit) {
+ 					return (char *) 0;
+ 				}
+ 				break;
+
+Property changes on: libcrack/src/rules.c
+___________________________________________________________________
+Modified: cvs2svn:cvs-rev
+## -1 +1 ##
+-1.1
+\ No newline at end of property
++1.2
+\ No newline at end of property
+Index: package.xml
+===================================================================
+--- package.xml	(.../tags/RELEASE_0_4)
++++ package.xml	(.../trunk)
+@@ -0,0 +1,154 @@
++<?xml version="1.0" encoding="ISO-8859-1" ?>
++<!DOCTYPE package SYSTEM "http://pear.php.net/dtd/package-2.0">
++<package version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
++  <name>crack</name>
++  <channel>pecl.php.net</channel>
++  <summary>"Good Password" Checking Utility: Keep your users' passwords reasonably safe from dictionary based attacks</summary>
++  <description>This package provides an interface to the cracklib (libcrack) libraries that come standard on most unix-like distributions. This allows you to check passwords against dictionaries of words to ensure some minimal level of password security.
++
++From the cracklib README
++CrackLib makes literally hundreds of tests to determine whether you've
++chosen a bad password.
++
++* It tries to generate words from your username and gecos entry to tries
++to match them against what you've chosen.
++
++* It checks for simplistic patterns.
++
++* It then tries to reverse-engineer your password into a dictionary
++word, and searches for it in your dictionary.
++
++- after all that, it's PROBABLY a safe(-ish) password. 8-)
++  </description>
++  <lead>
++    <name>Joseph Tate</name>
++    <user>jtate</user>
++    <email>jtate@php.net</email>
++    <active>yes</active>
++  </lead>
++  <lead>
++    <name>Sascha Kettler</name>
++    <user>skettler</user>
++    <email>skettler@php.net</email>
++    <active>yes</active>
++  </lead>
++  <date>2005-09-21</date>
++  <version>
++    <release>0.4</release>
++    <api>0.4</api>
++  </version>
++  <stability>
++    <release>stable</release>
++    <api>stable</api>
++  </stability>
++  <license uri="http://www.php.net/license/3_0.txt">PHP</license>
++  <notes>Updated to PEAR 1.4 (package2.xml format), added binary package for Win32, fixed compatibility with PHP 4.1</notes>
++  <contents>
++    <dir name="">
++      <file role="doc" name="CREDITS" />
++      <file role="doc" name="EXPERIMENTAL" />
++      <file role="src" name="config.m4" />
++      <file role="src" name="config.w32" />
++      <file role="src" name="crack.dsp" />
++      <file role="src" name="crack.c" />
++      <file role="src" name="php_crack.h" />
++      <dir name="libcrack">
++        <file role="doc" name="HISTORY" />
++        <file role="doc" name="LICENCE" />
++        <file role="doc" name="MANIFEST" />
++        <file role="doc" name="POSTER" />
++        <file role="doc" name="README" />
++        <dir name="util">
++          <file role="src" name="mkdict" />
++          <file role="src" name="packer.c" />
++          <file role="src" name="testlib.c" />
++          <file role="src" name="testnum.c" />
++          <file role="src" name="teststr.c" />
++          <file role="src" name="unpacker.c" />
++        </dir>
++        <dir name="src">
++          <file role="src" name="config.h" />
++          <file role="src" name="cracklib.h" />
++          <file role="src" name="fascist.c" />
++          <file role="src" name="genrules.pl" />
++          <file role="src" name="packlib.c" />
++          <file role="src" name="rules.c" />
++        </dir>
++        <dir name="include">
++          <file role="src" name="crack.h" />
++        </dir>
++      </dir>
++      <dir name="tests">
++        <file role="test" name="001.phpt" />
++      </dir>
++    </dir>
++  </contents>
++  <dependencies>
++    <required>
++      <php>
++        <min>4.1.0</min>
++      </php>
++      <pearinstaller>
++        <min>1.4.0b1</min>
++      </pearinstaller>
++    </required>
++  </dependencies>
++  <providesextension>crack</providesextension>
++  <extsrcrelease>
++   <binarypackage>crack_dll</binarypackage>
++  </extsrcrelease>
++  <changelog>
++    <release>
++      <date>2005-09-21</date>
++      <version>
++        <release>0.4</release>
++        <api>0.4</api>
++      </version>
++      <stability>
++        <release>stable</release>
++        <api>stable</api>
++      </stability>
++      <license uri="http://www.php.net/license/3_0.txt">PHP</license>
++      <notes>Updated to PEAR 1.4 (package2.xml format), added binary package for Win32, fixed compatibility with PHP 4.1</notes>
++    </release>
++    <release>
++      <date>2005-09-05</date>
++      <version>
++        <release>0.3</release>
++        <api>0.3</api>
++      </version>
++      <stability>
++        <release>beta</release>
++        <api>beta</api>
++      </stability>
++      <license uri="http://www.php.net/license/3_0.txt">PHP</license>
++      <notes>Bundled with cracklib, removed static variables for thread safety, new functionality</notes>
++    </release>
++    <release>
++      <date>2005-03-17</date>
++      <version>
++        <release>0.2</release>
++        <api>0.2</api>
++      </version>
++      <stability>
++        <release>stable</release>
++        <api>beta</api>
++      </stability>
++      <license uri="http://www.php.net/license/3_0.txt">PHP</license>
++      <notes>Fixes PHP bug #28905</notes>
++    </release>
++    <release>
++      <date>2004-07-21</date>
++      <version>
++        <release>0.1</release>
++        <api>0.1</api>
++      </version>
++      <stability>
++        <release>stable</release>
++        <api>beta</api>
++      </stability>
++      <license uri="http://www.php.net/license/3_0.txt">PHP</license>
++      <notes>Extension moved from PHP source to PECL</notes>
++    </release>
++  </changelog>
++</package>  
+
+Property changes on: package.xml
+___________________________________________________________________
+Added: cvs2svn:cvs-rev
+## -0,0 +1 ##
++1.4
+\ No newline at end of property
+Index: win32_dll
+===================================================================
+--- win32_dll	(.../tags/RELEASE_0_4)
++++ win32_dll	(.../trunk)
+
+Property changes on: win32_dll
+___________________________________________________________________
+Added: svn:ignore
+## -0,0 +1 ##
++*.dll
+Index: config.w32
+===================================================================
+--- config.w32	(.../tags/RELEASE_0_4)
++++ config.w32	(.../trunk)
+@@ -0,0 +1,18 @@
++// $Id$
++// vim:ft=javascript
++
++ARG_WITH("crack", "for cracklib support", "no");
++
++if (PHP_CRACK != "no") {
++	if (PHP_CRACK != "yes") {
++		ERROR("Only the bundled library is supported right now");
++	}
++	else {
++		// Use bundled library
++		
++		EXTENSION("crack", "crack.c", null, "-I" + configure_module_dirname + "/libcrack/src");
++		ADD_SOURCES(configure_module_dirname + "/libcrack/src", "fascist.c packlib.c rules.c", "crack");
++		AC_DEFINE("HAVE_CRACK", 1, "Define to 1 if we are building with the crack library.");
++		AC_DEFINE("HAVE_CRACK_BUNDLED", 1, "Define to 1 to build against the bundled crack library.");
++	}
++}
+
+Property changes on: config.w32
+___________________________________________________________________
+Added: svn:eol-style
+## -0,0 +1 ##
++native
+\ No newline at end of property
+Added: cvs2svn:cvs-rev
+## -0,0 +1 ##
++1.3
+\ No newline at end of property
+Added: svn:keywords
+## -0,0 +1 ##
++Id Rev Revision Date LastChangedDate LastChangedRevision Author LastChangedBy HeadURL URL
+\ No newline at end of property
+Index: php_crack.h
+===================================================================
+--- php_crack.h	(.../tags/RELEASE_0_4)
++++ php_crack.h	(.../trunk)
+@@ -38,6 +38,8 @@
+ 
+ #define crack_module_ptr &crack_module_entry
+ 
++#define PHP_CRACK_VERSION "0.5.0-dev"
++
+ PHP_MINIT_FUNCTION(crack);
+ PHP_MSHUTDOWN_FUNCTION(crack);
+ PHP_RINIT_FUNCTION(crack);
+
+Property changes on: php_crack.h
+___________________________________________________________________
+Modified: cvs2svn:cvs-rev
+## -1 +1 ##
+-1.7
+\ No newline at end of property
++1.8
+\ No newline at end of property
+Index: tests
+===================================================================
+--- tests	(.../tags/RELEASE_0_4)
++++ tests	(.../trunk)
+
+Property changes on: tests
+___________________________________________________________________
+Added: svn:ignore
+## -0,0 +1,6 ##
++phpt.*
++*.diff
++*.log
++*.exp
++*.out
++*.php
+Index: .
+===================================================================
+--- .	(.../tags/RELEASE_0_4)
++++ .	(.../trunk)
+
+Property changes on: .
+___________________________________________________________________
+Added: svn:ignore
+## -0,0 +1,13 ##
++*.lo
++*.la
++.deps
++*.plg
++*.opt
++*.ncb
++Release
++Release_inline
++Debug
++Release_TS
++Release_TSDbg
++Release_TS_inline
++Debug_TS
